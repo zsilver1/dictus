@@ -1,133 +1,101 @@
-from typing import Sequence, Optional, Tuple
+from typing import Sequence, Optional, Dict
 from tinydb import TinyDB, Query
-from tinydb.table import Table
+from tinydb.database import Document
 
 
 DocId = int
-
-
-class Word:
-    def __init__(self, word_name: str, defs: Sequence[Definition] = None):
-        self.word_name = word_name
-        self.defs = defs or []
-
-    def dump(self) -> dict:
-        return {
-            "word": self.word_name,
-            "defs": [d.dump() for d in self.defs],
-        }
-
-    @staticmethod
-    def load(word_dict: dict) -> Word:
-        return Word(word_dict["word"], word_dict["defs"])
-
-
-class Definition:
-    def __init__(self, pos: str, glosses: Sequence[str], desc: str = None):
-        self.pos = pos
-        self.glosses = glosses
-        self.desc = desc
-
-    def dump(self) -> dict:
-        return {"pos": self.pos, "glosses": self.glosses, "desc": self.desc}
-
-    @staticmethod
-    def load(def_dict) -> Definition:
-        return Definition(def_dict["pos"], def_dict["glosses"], def_dict.get("desc"))
+Word = str
 
 
 class Model:
 
     LANGUAGE_TABLE = "languages"
+    WORD_TABLE = "words"
+    DEFS_TABLE = "defs"
 
     def __init__(self, db_file):
         self.db = TinyDB(db_file)
         self.lang = None
+        self.lang_id = None
+        # words table contains word_id -> {word, language_id, [definition_ids]}
+        # languages table contains id -> {language}
+        # definitions table contains def_id -> {pos, [glosses], desc, word_id, lang_id}
+        self.lang_table = self.db.table(self.LANGUAGE_TABLE)
+        self.word_table = self.db.table(self.WORD_TABLE)
+        self.defs_table = self.db.table(self.DEFS_TABLE)
 
-    def _get_lang_table(self, lang: str) -> Table:
-        lang = lang or self.lang
-        if not lang:
-            raise RuntimeError("No language selected")
-        return self.db.table(lang)
-
-    def insert_word(self, word: Word, lang: str = None) -> DocId:
-        table = self._get_lang_table(lang)
-        return table.insert(word.dump())
+    def insert_word(self, word: Word) -> DocId:
+        return self.word_table.insert({"word": word, "lang": self.lang_id})
 
     def insert_language(self, lang: str) -> DocId:
-        if lang == Model.LANGUAGE_TABLE:
-            raise RuntimeError("Invalid language name: 'languages'")
+        return self.lang_table.insert({"language": lang})
 
-        language = Query()
-        if self.db.get(language.language == lang):
-            raise RuntimeError("Language already exists")
-
-        lang_table = self.db.table(Model.LANGUAGE_TABLE)
-        lang_table.insert({"language": lang})
+    def insert_def(self, new_def: Dict):
+        new_def["lang"] = self.lang_id
+        self.defs_table.insert(new_def)
 
     def set_language(self, lang: str):
-        lang_table = self.db.table(Model.LANGUAGE_TABLE)
         language = Query()
-        if not self.db.get(language.language == lang):
+        rec = self.lang_table.get(language.language == lang)
+        if not rec:
             raise RuntimeError("Language not found")
         self.lang = lang
+        self.lang_id = rec.doc_id
 
-    def get_word_by_id(self, word_id: DocId, lang: str = None) -> Optional[Word]:
-        table = self._get_lang_table(lang)
+    def get_word_by_id(self, word_id: DocId) -> Optional[Document]:
+        return self.word_table.get(doc_id=word_id)
+
+    def search_words_by_name(self, word_name: str) -> Sequence[Document]:
         word = Query()
-        doc = table.get(doc_id=word_id)
-        if doc:
-            return Word.load(doc)
-        return None
+        return self.word_table.search(
+            (word.word == word_name) & (word.lang == self.lang_id)
+        )
 
-    def search_words_by_name(self, word_name: str, lang: str = None) -> Sequence[Word]:
-        table = self._get_lang_table(lang)
+    @staticmethod
+    def _gloss_test(vals, gloss):
+        gloss = gloss.lower()
+        for v in vals:
+            v = v.lower()
+            if v == gloss:
+                return True
+            if gloss in v:
+                return True
+        return False
+
+    def search_words_by_gloss(self, gloss: str) -> Sequence[Document]:
+
+        definition = Query()
+        return self.defs_table.search(
+            (definition.glosses.test(self._gloss_test, gloss))
+            & (definition.lang == self.lang_id)
+        )
+
+    def search_words_by_pos(self, pos: str) -> Sequence[Document]:
+        definition = Query()
+        return self.defs_table.search(
+            (definition.pos == pos) & (definition.lang == self.lang_id)
+        )
+
+    def search_words_by_gloss_pos(self, gloss: str, pos: str) -> Sequence[Word]:
+        definition = Query()
+        return self.defs_table.search(
+            (definition.glosses.test(self._gloss_test, gloss))
+            & (definition.pos == pos)
+            & (definition.lang == self.lang_id)
+        )
+
+    def get_all_words(self) -> Sequence[Document]:
         word = Query()
-        docs = table.search((word.word == word_name))
-        return [Word.load(w) for w in docs]
+        return self.word_table.search(word.lang == self.lang_id)
 
-    def search_words_by_gloss(
-        self, gloss: str, lang: str = None
-    ) -> Sequence[Tuple[Word, int]]:
-        def _gloss_test(vals, gloss):
-            gloss = gloss.lower()
-            for v in vals:
-                v = v.lower()
-                if v == gloss:
-                    return True
-                if gloss in v:
-                    return True
-            return False
+    def update_word(self, word_id: DocId, new_word: Dict):
+        pass
 
-        table = self._get_lang_table(lang)
-        word = Query()
-        def_q = Query()
-        docs = table.search((word.defs.any(def_q.glosses.test(_gloss_test, gloss))))
-        return [Word.load(w) for w in docs]
+    def update_def(self, def_id: DocId, new_def: Dict):
+        pass
 
-    def search_words_by_pos(
-        self, pos: str, lang: str = None
-    ) -> Sequence[Tuple[Word, int]]:
-        table = self._get_lang_table(lang)
-        word = Query()
-        def_q = Query()
-        docs = table.search((word.defs.any(def_q.glosses.test(_gloss_test, gloss))))
-        return [Word.load(w) for w in docs]
-        
-
-    def search_words_by_gloss_pos(
-        self,
-        gloss: str,
-        pos: str,
-        lang: str = None,
-    ) -> Sequence[Word]:
-        table = self._get_lang_table(lang)
-        word = Query()
-
-    def get_all_words(self, lang: str = None) -> Sequence[Word]:
-        table = self._get_lang_table(lang)
-        return [Word.load(w) for w in table.all()]
+    def update_lang(self, lang_id: DocId, new_lang: Dict):
+        pass
 
     def get_all_languages(self) -> Sequence[str]:
-        lang_table = self.db.table(Model.LANGUAGE_TABLE)
-        return lang_table.all()
+        return [rec["language"] for rec in self.lang_table.all()]
