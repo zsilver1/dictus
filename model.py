@@ -13,6 +13,7 @@ class Model:
     DEFS_TABLE = "defs"
     LINKS_TABLE = "links"
     METADATA_TABLE = "metadata"
+    DOCS_TABLE = "docs"
 
     def __init__(self, db_file):
         self.db = TinyDB(db_file)
@@ -22,17 +23,19 @@ class Model:
         # languages table contains id -> {language}
         self.lang_table = self.db.table(self.LANGUAGE_TABLE)
 
-        # words table contains word_id -> {word, language_id, [definition_ids]}
+        # words table contains word_id -> {word, language_id, desc}
         self.word_table = self.db.table(self.WORD_TABLE)
 
         # definitions table contains def_id -> {pos, [glosses], desc, word_id, lang_id}
         self.defs_table = self.db.table(self.DEFS_TABLE)
 
-        # links table contains link_id -> {from_word (id), to_word (id), link_type (str)}
-        self.links_table = self.db.table(self.LINKS_TABLE)
-
         # metadata table contains a single document that we will continue to update
         self.metadata_table = self.db.table(self.METADATA_TABLE)
+
+        # for language docs (grammar tables, etc), anything word specific should
+        # be in a definition's desc
+        # docs table contains doc_id -> {lang_id, doc(str)}
+        self.docs_table = self.db.table(self.DOCS_TABLE)
 
     @property
     def lang(self):
@@ -46,14 +49,17 @@ class Model:
             raise RuntimeError("Must select language")
         return self._lang_id
 
-    def insert_word(self, word: str) -> DocId:
-        return self.word_table.insert({"word": word, "lang": self.lang_id})
+    def insert_word(self, word: str, desc: str = None) -> DocId:
+        return self.word_table.insert(
+            {"word": word, "lang": self.lang_id, "desc": desc}
+        )
 
     def insert_language(self, lang: str) -> DocId:
         return self.lang_table.insert({"language": lang})
 
-    def insert_def(self, new_def: Dict):
+    def insert_def(self, word: DocId, new_def: Dict):
         new_def["lang"] = self.lang_id
+        new_def["word"] = word
         self.defs_table.insert(new_def)
 
     def set_language(self, lang: str):
@@ -145,13 +151,9 @@ class Model:
     def update_lang_name(self, lang_id: DocId, new_lang: str):
         self.lang_table.update({"language": new_lang}, doc_ids=lang_id)
 
-    def insert_link(self, from_word: DocId, to_word: DocId, link_type: str) -> DocId:
-        if not self.word_table.get(from_word):
-            raise RuntimeError(f"Invalid word id {from_word}")
-        if not self.word_table.get(to_word):
-            raise RuntimeError(f"Invalid word id {to_word}")
-        return self.links_table.insert(
-            {"from_word": from_word, "to_word": to_word, "link_type": link_type}
+    def insert_doc(self, doc_name: str, doc: str) -> DocId:
+        return self.docs_table.insert(
+            {"lang": self.lang_id, "doc": doc, "name": doc_name}
         )
 
     def get_all_languages(self) -> Sequence[str]:
@@ -161,11 +163,6 @@ class Model:
         self.word_table.remove(doc_ids=word_id)
         definition = Query()
         self.defs_table.remove(definition.word_id == word_id)
-        link = Query()
-        self.links_table.remove((link.from_word == word_id) | (link.to_word == word_id))
 
     def delete_def(self, def_id: DocId):
         self.defs_table.remove(doc_ids=def_id)
-
-    def delete_link(self, link_id: DocId):
-        self.links_table.remove(doc_ids=link_id)
