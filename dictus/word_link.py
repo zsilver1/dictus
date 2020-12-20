@@ -1,4 +1,3 @@
-import re
 import xml.etree.ElementTree as etree
 
 from markdown.extensions import Extension

@@ -1,11 +1,11 @@
 import click
 
 
-@click.command()
 def dictus():
     pass
 
 
+@click.command()
 def main():
     pass
 

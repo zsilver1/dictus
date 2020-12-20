@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Tuple
 import os
 import markdown
 import re
-from word_link import WordLinkExtension
+from .word_link import WordLinkExtension
 
 
 class Word:
