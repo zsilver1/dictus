@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ site_name }}</title>
+  </head>
+  <body>
+    {# Navigation Bar #}
+    <div id="topnav">
+      {% for lang in langs %}
+        <a href="{{ lang.name }}.html">{{ lang.display_name }}</a>
+      {% endfor %}
+    </div>
+
+    {# Search Bar #}
+    <div id="widgets">
+      <select>
+        {% block pos %}
+        {% endblock pos %}          
+      </select>
+      <input class="search" id="search" placeholder="Search for words...">
+    </div>
+
+    {# BLOCK FOR DICT #}
+    {% block dict %}
+      No words here...
+    {% endblock dict %}
+  </body>
+</html>

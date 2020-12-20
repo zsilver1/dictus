@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Tuple
 import os
 import markdown
 import re
-from .word_link import WordLinkExtension
+from word_link import WordLinkExtension
 
 
 class Word:
@@ -25,24 +25,33 @@ class Definition:
         return f"Def({self.props})"
 
 
+class Language:
+    def __init__(self, name):
+        self.name = name
+        self.display_name = name
+        self.words: List[Word] = []
+        self.pos_set = set()
+
+
 class DictusParser:
 
     property_regex = re.compile(r"^\$\{(.*):\s*(.*)\}")
 
     def __init__(self, *files, **markdown_kwargs):
-        self.words: List[Word] = []
-        self.languages: Dict[str, List[Word]] = {}
+        self.languages: List[Language] = []
         self.files = files
+
+        lang_names = []
         for f in files:
-            lang = self._extract_lang_name(f)
-            self.languages[lang] = []
+            lang_names.append(self._extract_lang_name(f))
         self.cur_word: Optional[Word] = None
         self.cur_def: Optional[Definition] = None
+        self.cur_lang: Optional[Language] = None
 
         if not markdown_kwargs.get("extensions"):
             markdown_kwargs["extensions"] = []
 
-        markdown_kwargs["extensions"].append(WordLinkExtension(self.languages.keys()))
+        markdown_kwargs["extensions"].append(WordLinkExtension(lang_names))
         self.markdown = markdown.Markdown(**markdown_kwargs)
 
     def run(self) -> Dict[str, List[Word]]:
@@ -62,10 +71,12 @@ class DictusParser:
             return header
         return None
 
-    @staticmethod
-    def _get_prop_from_line(line: str) -> Optional[Tuple[str, str]]:
+    def _get_prop_from_line(self, line: str) -> Optional[Tuple[str, str]]:
         line = line.strip()
         if m := DictusParser.property_regex.match(line):
+            # special case for parts of speech
+            if m.group(1) == "pos":
+                self.cur_lang.pos_set.add(m.group(2).lower().strip())
             return (m.group(1), m.group(2))
         return None
 
@@ -76,6 +87,7 @@ class DictusParser:
 
     def _populate_from_file(self, filename):
         lang = self._extract_lang_name(filename)
+        self.cur_lang = Language(lang)
         words: List[Word] = []
         cur_text = []
 
@@ -123,4 +135,5 @@ class DictusParser:
             self.cur_word.text = self._parse_markdown(cur_text)
             words.append(self.cur_word)
 
-        self.languages[lang] = words
+        self.cur_lang.words = words
+        self.languages.append(self.cur_lang)
