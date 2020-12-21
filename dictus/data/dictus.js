@@ -25,6 +25,8 @@ function strDistance(s1, s2) {
     return costs[s2.length];
 }
 
+
+
 function similarity(s1, s2) {
     var longer = s1;
     var shorter = s2;
@@ -36,72 +38,105 @@ function similarity(s1, s2) {
     if (longerLength == 0) {
         return 1.0;
     }
+
+    // if it's not a subtring, abort
+    if (!longer.includes(shorter)) {
+        return 0;
+    }
     return (longerLength - strDistance(longer, shorter)) / parseFloat(longerLength);
 }
 
 
-function sortResults() {
-    $("#content .word").sort((a, b) => {
-        return ($(b).data("similarity") - $(a).data("similarity"));
+function scoreWord(word, inputStr, highlight = true, hide = true) {
+    // Looks through all definitions of a word, returns the maximum score of any
+    // of the definitions. Optionally highlights matched portions of glosses.
+    // If hide = true, will hide any word with a score of 0.
+    let glosses = $(word).find(".glosses");
+    var score = 0;
+
+    $(glosses).each(function(_) {
+        let glossList = this.innerHTML.split(",").map(s => s.trim());
+        for (i in glossList) {
+            let s = similarity(glossList[i], inputStr);
+            score = Math.max(score, s);
+        }
+
+        if (highlight) {
+            let regex_input = new RegExp(inputStr, "g");
+            $(this).html(
+                $(this).html().replace(regex_input, "<span class = 'highlight'>" + inputStr + "</span>")
+            );
+        }
+    });
+
+    if (hide && score <= 0) {
+        $(word).hide();
+    }
+    $(word).data("score", score);
+    return score;
+}
+
+function sortAll() {
+    $("#content .word.main").sort((a, b) => {
+        return ($(b).data("score") - $(a).data("score"));
     }).appendTo("#content");
 }
 
-function filterOnSearch(input) {
-    if (input.length === 0) {
-        $("#content").html(cache);
-        $("#content").show();
-        // TODO
-        // filterByPos($("#select").val().toLowerCase());
-        return;
-    }
-    $("#content").children(".word").each((i, word) => {
-        var def = $(word).children(".def");
-        $(def).html($(def).data("orig_html"));
-        let def_text = $(def).text().toLowerCase();
-        if (!def_text.includes(input)) {
-            $(word).hide();
-            $(word).data("similarity", 0);
+function filterWordByPos(word, pos) {
+    // Takes a word and pos, hides all definitions that do not match the
+    // specified pos. If not definitions are left at the end, hide the word.
+
+    pos = pos.replace(/\W/g, '');
+    var matched = false;
+
+    $(word).find(".pos").each(function(_) {
+        let wordPos = this.innerHTML.replace(/\W/g, '');
+        if (wordPos === pos) {
+            matched = true;
         } else {
-            if (!$(word).data("hiddenPosFilter")) {
-                $(word).data("similarity", rateDef(input, def_text));
-                let regex_input = new RegExp(input, "g");
-                $(def).data("orig_html", $(def).html())
-                $(def).html(
-                    $(def).html().replace(regex_input, "<span class = 'highlight'>" + input + "</span>")
-                );
-                $(word).show();
-            }
+            $(this).closest(".def.main").hide();
         }
-    })
-    sortResults();
-}
+    });
 
-function filterByPos(pos) {
-    if (pos === "all") {
-        $("#content").html(cache);
-        $("#content").show();
-    }
-    // TODO
-    // filter again by search if need be
-    let val = $("#search").val().toLowerCase();
-    if (val.length > 0) {
-        filterOnSearch(val);
+    if (!matched) {
+        $(word).hide();
     }
 }
 
+function filterWords(input, pos) {
+    resetDom();
+
+    let filterPos = (pos !== "all");
+
+    $("#content").find(".word.main").each(function(_) {
+        if (filterPos) {
+            filterWordByPos(this, pos);
+        }
+        if (input) {
+            scoreWord(this, input);
+        }
+    });
+
+    if (input) {
+        sortAll();
+    }
+}
+
+function resetDom() {
+    $("#content").html(cache);
+}
 
 $(document).ready(function () {
     cache = $("#content").html();
 
     $("#select").change(function () {
+        let input = $("#search").val().toLowerCase();
         let pos = $(this).val().toLowerCase();
-        filterByPos(pos);
+        filterWords(input, pos);
     });
 
-    $("#search").keyup(function (e) {
-        if (e.keyCode === 13) {
-            let input = $(this).val().toLowerCase();
-            filterOnSearch(input);
-        }
+    $("#search").bind("search", function (_) {
+        let pos = $("#select").val().toLowerCase();
+        filterWords(search.value, pos);
     });
 });

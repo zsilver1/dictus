@@ -1,5 +1,5 @@
 {% macro sentence_case(text) %}
-    {{ text[0]|upper}}{{text[1:] }}
+  {{ text[0]|upper}}{{text[1:] }}
 {% endmacro %}
 
 {% extends "base.jinja2" %}
@@ -12,16 +12,16 @@
 
 {% block content %}
   {% for word in lang.words %}
-    <hr class="word line">
     <div class="word main" id={{ word.name }}>
+      <hr class="word line">
       <h1 class="word name">{{ word.name }}</h1>
       <div class="word props">
-          {% for prop in word.props %}
-            <div class="prop">
-              {{ prop }}
-            </div>
-          {% endfor %}
-        </div>
+        {% for prop in word.props %}
+          <div class="prop">
+            {{ prop }}
+          </div>
+        {% endfor %}
+      </div>
       <div class="word text">
         {{word.text}}
       </div>
@@ -29,21 +29,23 @@
 
       {# LOOP THROUGH DEFINITIONS #}
       {% for def in word.defs %}
-        <div class="def props">
-          <div class="term pos">
-            {{ def.props.pop("pos", "") }}
-          </div>
-          <div class="glosses">
-            {{ def.props.pop("glosses", "") }}
-          </div>
-          {% for prop in def.props %}
-            <div class="prop">
-              {{ prop }}
+        <div class="def main">
+          <div class="def props">
+            <div class="term pos">
+              {{ def.props.pop("pos", "") }}
             </div>
-          {% endfor %}
-        </div>
-        <div class="def text">
-          {{ def.text }}
+            <div class="glosses">
+              {{ def.props.pop("glosses", "") }}
+            </div>
+            {% for prop in def.props %}
+              <div class="prop">
+                {{ prop }}
+              </div>
+            {% endfor %}
+          </div>
+          <div class="def text">
+            {{ def.text }}
+          </div>
         </div>
       {% endfor %}
     </div>

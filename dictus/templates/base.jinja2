@@ -25,12 +25,12 @@
         {% block pos %}
         {% endblock pos %}          
       </select>
-      <input id="search" placeholder="Search for words..." autocomplete="off">
+      <input id="search" type="search" placeholder="Search for words..." autocomplete="off">
     </div>
 
+    <h1 id="title">{{ lang.display_name }} Lexicon</h1>
     {# BLOCK FOR CONTENT #}
     <div id="content">
-      <h1 id="title">{{ lang.display_name }} Lexicon</h1>
       {% block content %}
         No words here...
       {% endblock content %}
