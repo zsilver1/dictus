@@ -4,6 +4,10 @@ body {
     font-family: "Times New Roman", Times, serif;
 }
 
+#title {
+    text-align: center;
+}
+
 #content {
     max-width: 1000px;
     margin: auto;
@@ -52,7 +56,6 @@ hr {
     border-bottom: 1px solid #ddd;
 }
 
-
 /* WORD */
 .word.name {
     font-weight: bold;
@@ -61,9 +64,24 @@ hr {
     font-size: 140%;
 }
 
+.word.props {
+    font-style: italic;
+    font-size: 80%;
+}
+
 /* DEFINITION */
+.def.props {
+    /* font-style: italic; */
+    padding-bottom: 2%;
+}
+
 .term {
     font-variant: small-caps;
+    font-size: 120%;
+}
+
+.glosses {
+    font-style: italic;
 }
 
 
