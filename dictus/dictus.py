@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from typing import List
 import os
 import click
 
@@ -21,19 +21,21 @@ def _markdown_kwargs():
     }
 
 
-def dictus(input: str, output_dir: str, templates: str):
+def dictus(input: List[str], output_dir: str, templates: str):
     files = []
-    if os.path.isdir(input):
-        files = os.listdir(input)
-    else:
-        files = [input]
+    for i in input:
+        if os.path.isdir(i):
+            files += os.listdir(i)
+        else:
+            files.append(i)
 
     parser = DictusParser(*files, **_markdown_kwargs())
     langs = parser.run()
 
     gen = DictusGenerator(
-        langs, site_name="Language", template_dir=templates, output_dir=output_dir
+        langs, site_name="Language", output_dir=output_dir, # template_dir=templates 
     )
+    gen.run()
 
 
 @click.command()
@@ -41,6 +43,7 @@ def dictus(input: str, output_dir: str, templates: str):
     "--input",
     "--in",
     help="Input markdown file or directory with markdown files",
+    multiple=True,
     required=True,
     type=click.Path(exists=True),
 )

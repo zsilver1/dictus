@@ -2,27 +2,31 @@
 <html lang="en">
   <head>
     <title>{{ site_name }}</title>
+    <link rel="stylesheet" href="../data/dictus.css">
   </head>
   <body>
     {# Navigation Bar #}
     <div id="topnav">
       {% for lang in langs %}
-        <a href="{{ lang.name }}.html">{{ lang.display_name }}</a>
+        <a class="toplink" href="{{ lang[0] }}.html">{{ lang[1] }}</a>
       {% endfor %}
     </div>
 
     {# Search Bar #}
     <div id="widgets">
-      <select>
+      <select id="select">
         {% block pos %}
         {% endblock pos %}          
       </select>
-      <input class="search" id="search" placeholder="Search for words...">
+      <input id="search" placeholder="Search for words..." autocomplete="off">
     </div>
 
-    {# BLOCK FOR DICT #}
-    {% block dict %}
-      No words here...
-    {% endblock dict %}
+    {# BLOCK FOR CONTENT #}
+    <div id="content">
+      <h1 id="title">{{ lang.display_name }} Lexicon</h1>
+      {% block content %}
+        No words here...
+      {% endblock content %}
+    </div>
   </body>
 </html>

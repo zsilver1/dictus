@@ -1,0 +1,106 @@
+/* GENERIC */
+
+body {
+    font-size: 1.2em;
+    font-family: "Times New Roman", Times, serif;
+}
+
+#content {
+    max-width: 1000px;
+    margin: auto;
+    display: grid;
+}
+
+/* ALL DICTIONARY ENTRIES */
+
+/* .entry { */
+/*     display: inline-flex; */
+/* } */
+
+/* /\* MAIN WORDS *\/ */
+
+/* .main { */
+/*     margin-top: 1em; */
+/* } */
+
+/* /\* SUBWORDS *\/ */
+
+/* .sub { */
+/*     margin-top: 0.2em; */
+/*     padding-left: 3em; */
+/* } */
+
+/* /\* ELEMENTS OF DICTIONARY ENTRY *\/ */
+
+.word.name {
+    font-weight: bold;
+    font-style: italic;
+    flex-shrink: 0;
+    font-size: 140%;
+}
+
+/* .pos { */
+/*     margin-left: 0.5em; */
+/*     flex-shrink: 0; */
+/* } */
+
+.term {
+    font-variant: small-caps;
+}
+
+/* .irreg { */
+/*     flex-shrink: 0; */
+/*     margin-left: 0.3em; */
+/* } */
+
+/* .irreg_form { */
+/*     font-weight: bold; */
+/*     font-style: italic; */
+/*     font-size: 90%; */
+/*     color: #2F4F4F; */
+/* } */
+
+/* .def { */
+/*     margin-left: 0.5em; */
+/*     white-space: pre; */
+/* } */
+
+/* .translation { */
+    
+/* } */
+
+/* /\* RANDOM STUFF *\/ */
+
+a:visited {
+    color: blue;
+}
+
+.highlight {
+    font-weight: bold;
+    background-color: yellow;
+}
+
+/* WIDGETS */
+
+#widgets {
+    display: flex;
+    position: fixed;
+    width: 400px;
+    right: 5px;
+}
+
+#search {
+    font-size: 16px;
+    padding: 12px 20px 12px 40px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
+}
+
+#select {
+    width: 60px;
+    height: 20px;
+    font-size: 12px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    margin-right: 5px;
+}

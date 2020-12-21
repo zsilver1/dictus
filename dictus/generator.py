@@ -12,7 +12,7 @@ class DictusGenerator:
         langs: List[Language],
         site_name: str = "Dictionary",
         template_dir: str = "templates",
-        output_dir: str = "build"
+        output_dir: str = "build",
     ):
         self.site_name = site_name
         self.output_dir = output_dir
@@ -30,8 +30,8 @@ class DictusGenerator:
 
     def _render_lang_file(self, lang: Language) -> str:
         template = self.env.get_template("lang.jinja2")
-        return template.render(site_name=self.site_name, lang=lang)
-
-    @staticmethod
-    def _format_lang_for_display(lang_name: str):
-        return "-".join(map(str.capitalize, lang_name.split("_")))
+        return template.render(
+            site_name=self.site_name,
+            lang=lang,
+            langs=[(l.name, l.display_name) for l in self.langs],
+        )

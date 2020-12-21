@@ -1,7 +1,10 @@
 from typing import Dict, List, Optional, Tuple
 import os
-import markdown
 import re
+from collections import OrderedDict
+
+import markdown
+
 from word_link import WordLinkExtension
 
 
@@ -9,7 +12,7 @@ class Word:
     def __init__(self, name: str):
         self.name = name
         self.text = ""
-        self.props: Dict[str, str] = {}
+        self.props: OrderedDict[str, str] = OrderedDict()
         self.defs: List[Definition] = []
 
     def __repr__(self):
@@ -28,9 +31,13 @@ class Definition:
 class Language:
     def __init__(self, name):
         self.name = name
-        self.display_name = name
+        self.display_name = self._format_lang_for_display(name)
         self.words: List[Word] = []
         self.pos_set = set()
+
+    @staticmethod
+    def _format_lang_for_display(lang_name: str):
+        return "-".join(map(str.capitalize, lang_name.split("_")))
 
 
 class DictusParser:
@@ -54,8 +61,11 @@ class DictusParser:
         markdown_kwargs["extensions"].append(WordLinkExtension(lang_names))
         self.markdown = markdown.Markdown(**markdown_kwargs)
 
-    def run(self) -> Dict[str, List[Word]]:
+    def run(self) -> List[Language]:
         for f in self.files:
+            self.cur_word = None
+            self.cur_def = None
+            self.cur_lang = None
             self._populate_from_file(f)
         return self.languages
 
@@ -115,6 +125,9 @@ class DictusParser:
                     self.cur_def.text = self._parse_markdown(cur_text)
                     cur_text = []
                     self.cur_word.defs.append(self.cur_def)
+                elif self.cur_word:
+                    self.cur_word.text = self._parse_markdown(cur_text)
+                    cur_text = []
                 self.cur_def = Definition()
 
             # parse properties and add to relevant word or def
@@ -130,6 +143,7 @@ class DictusParser:
         if self.cur_def and self.cur_word:
             self.cur_def.text = self._parse_markdown(cur_text)
             self.cur_word.defs.append(self.cur_def)
+            words.append(self.cur_word)
 
         elif self.cur_word:
             self.cur_word.text = self._parse_markdown(cur_text)
