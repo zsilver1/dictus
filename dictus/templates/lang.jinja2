@@ -25,11 +25,10 @@
 
       {# LOOP THROUGH DEFINITIONS #}
       {% for def in word.defs %}
-        <hr class="def line">
-        <div class="term">
-          {{ def.props.pop("pos", "") }}
-        </div>
         <div class="def props">
+          <div class="term">
+            {{ def.props.pop("pos", "") }}
+          </div>
           {% for prop in def.props %}
             <div class="prop">
               {{ prop }}

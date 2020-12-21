@@ -7,9 +7,11 @@
   <body>
     {# Navigation Bar #}
     <div id="topnav">
-      {% for lang in langs %}
-        <a class="toplink" href="{{ lang[0] }}.html">{{ lang[1] }}</a>
-      {% endfor %}
+      <ul>
+        {% for lang in langs %}
+          <li><a class="toplink" href="{{ lang[0] }}.html">{{ lang[1] }}</a></li>
+        {% endfor %}
+      </ul>
     </div>
 
     {# Search Bar #}
