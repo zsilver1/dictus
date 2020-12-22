@@ -1,11 +1,48 @@
+#!/usr/bin/env python3
 from typing import Dict, List, Optional, Tuple
 import os
 import re
+import click
 from collections import OrderedDict
+from jinja2 import Environment, PackageLoader, select_autoescape
+import xml.etree.ElementTree as etree
 
 import markdown
+from markdown.extensions import Extension
+from markdown.inlinepatterns import InlineProcessor
 
-from word_link import WordLinkExtension
+from fuzzywuzzy import process
+
+
+class WordLinkProcessor(InlineProcessor):
+    def __init__(self, pattern, md=None, langs=None):
+        super().__init__(pattern, md)
+        self.langs = langs or []
+
+    def handleMatch(self, m, data):
+        el = etree.Element("a")
+        word = m.group("word")
+        if lang := m.group("lang"):
+            lang = process.extractOne(lang, self.langs)[0]
+            el.attrib["href"] = f"{lang}.html#{word}"
+            el.text = f"{lang}:{word}"
+        else:
+            el.attrib["href"] = f"#{word}"
+            el.text = f"{word}"
+        return el, m.start(0), m.end(0)
+
+
+class WordLinkExtension(Extension):
+    regex = r"\[\[(?:(?P<lang>\w*):)?(?P<word>\w*)\]\]"
+
+    def __init__(self, langs, **kwargs):
+        self.langs = langs
+        super().__init__(**kwargs)
+
+    def extendMarkdown(self, md):
+        md.inlinePatterns.register(
+            WordLinkProcessor(self.regex, md, self.langs), "wordlink", 175
+        )
 
 
 class Word:
@@ -151,3 +188,103 @@ class DictusParser:
 
         self.cur_lang.words = words
         self.languages.append(self.cur_lang)
+
+
+class DictusGenerator:
+    def __init__(
+        self,
+        langs: List[Language],
+        site_name: str = "Dictionary",
+        template_dir: str = "templates",
+        output_dir: str = "build",
+        data_dir: str = "data",
+    ):
+        self.site_name = site_name
+        self.output_dir = output_dir
+        self.env = Environment(
+            loader=PackageLoader("dictus", template_dir),
+            autoescape=select_autoescape(["html"]),
+        )
+        self.langs = langs
+
+    def run(self):
+        for lang in self.langs:
+            path = os.path.join(self.output_dir, f"{lang.name}.html")
+            with open(path, "w") as f:
+                f.write(self._render_lang_file(lang))
+
+    def _render_lang_file(self, lang: Language) -> str:
+        template = self.env.get_template("lang.jinja2")
+        return template.render(
+            site_name=self.site_name,
+            lang=lang,
+            langs=[(l.name, l.display_name) for l in self.langs],
+        )
+
+
+def _markdown_kwargs():
+    return {
+        "extensions": [
+            "footnotes",
+            "tables",
+            "smarty",
+            "sane_lists",
+            "pymdownx.betterem",
+            "pymdownx.caret",
+            "pymdownx.tilde",
+        ]
+    }
+
+
+def dictus(input: List[str], output_dir: str, templates: str, data: str):
+    files = []
+    for i in input:
+        if os.path.isdir(i):
+            files += os.listdir(i)
+        else:
+            files.append(i)
+
+    parser = DictusParser(*files, **_markdown_kwargs())
+    langs = parser.run()
+
+    gen = DictusGenerator(
+        langs,
+        site_name="Language",
+        output_dir=output_dir,
+        # template_dir=templates,
+        # data_dir=data,
+    )
+    gen.run()
+
+
+@click.command()
+@click.option(
+    "--input",
+    "--in",
+    help="Input markdown file or directory with markdown files",
+    multiple=True,
+    required=True,
+    type=click.Path(exists=True),
+)
+@click.option(
+    "--output-dir",
+    "--out",
+    help="Output directory to write html files",
+    type=click.Path(exists=True, file_okay=False),
+)
+@click.option(
+    "--templates",
+    help="Directory with templates 'base.jinja2' and 'lang.jinja2'",
+    type=click.Path(exists=True, file_okay=False),
+)
+@click.option(
+    "--data",
+    help="Path containing 'dictus.css' and 'dictus.js' files to be included in the output",
+    type=click.Path(exists=True, file_okay=False),
+)
+def main(input, output_dir, templates, data):
+    dictus(input, output_dir, templates, data)
+
+
+if __name__ == "__main__":
+    main()
