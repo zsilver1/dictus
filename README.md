@@ -1,9 +1,11 @@
-# Markdown Modified Syntax
+# Dictus
+
+## Markdown Modified Syntax
 
 ### Creating Words
 
-Any `H1` (i.e. a line beginning wth `# `) will be treated as the start of a new
-word. All text until the next `H1`, including all definitions, will be grouped
+Any `h1` (i.e. a line beginning wth `# `) will be treated as the start of a new
+word. All text until the next `h1`, including all definitions, will be grouped
 with the current word. Any captured properties or text that are not inside of a
 definition will be associated with the word itself.
 
