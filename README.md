@@ -16,6 +16,14 @@ Creating a definition is as simple as inserting a line with three dashes
 properties and text will be associated with the current definition until a new
 word or definition is encountered.
 
+### Capturing Tags
+**Note**: Capturing only works if the below strings are on their own line.
+
+`${value}` - Captures tag `value`.
+
+`${list, of, values}` - Captures tag `list, of, values`.
+
+
 ### Capturing Properties
 
 **Note**: Capturing only works if the below strings are on their own line.
