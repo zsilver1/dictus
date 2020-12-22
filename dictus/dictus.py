@@ -2,6 +2,7 @@
 from typing import Dict, List, Optional, Tuple
 import os
 import re
+import math
 import click
 from collections import OrderedDict
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -71,6 +72,16 @@ class Language:
         self.display_name = self._format_lang_for_display(name)
         self.words: List[Word] = []
         self.pos_set = set()
+        self.props = Dict[str, str]
+        self.order = math.inf
+
+    def set_prop(self, key, val):
+        if key == "name":
+            self.display_name = val
+        elif key == "order":
+            self.order = int(val)
+        else:
+            self.props[key] = val
 
     @staticmethod
     def _format_lang_for_display(lang_name: str):
@@ -92,6 +103,8 @@ class DictusParser:
         self.cur_def: Optional[Definition] = None
         self.cur_lang: Optional[Language] = None
 
+        self.in_front_matter = False
+
         if not markdown_kwargs.get("extensions"):
             markdown_kwargs["extensions"] = []
 
@@ -104,6 +117,7 @@ class DictusParser:
             self.cur_def = None
             self.cur_lang = None
             self._populate_from_file(f)
+        self.languages.sort(key=lambda lang: lang.order)
         return self.languages
 
     @staticmethod
@@ -132,11 +146,24 @@ class DictusParser:
         text = text.strip()
         return self.markdown.convert(text)
 
+    def _handle_front_matter(self, line):
+        if not self.in_front_matter and line.startswith("---"):
+            self.in_front_matter = True
+
+        elif self.in_front_matter and line.startswith("---"):
+            self.in_front_matter = False
+
+        elif self.in_front_matter:
+            line = [s.strip() for s in line.split(":")]
+            key, val = line[0], line[1]
+            self.cur_lang.set_prop(key, val)
+
     def _populate_from_file(self, filename):
         lang = self._extract_lang_name(filename)
         self.cur_lang = Language(lang)
         words: List[Word] = []
         cur_text = []
+        hit_first_header = False
 
         with open(filename) as f:
             lines = f.readlines()
@@ -144,6 +171,7 @@ class DictusParser:
         for line in lines:
             # create a new word
             if word := self._get_header_from_line(line):
+                hit_first_header = True
                 if self.cur_def and self.cur_word:
                     self.cur_def.text = self._parse_markdown(cur_text)
                     self.cur_word.defs.append(self.cur_def)
@@ -155,6 +183,10 @@ class DictusParser:
                     words.append(self.cur_word)
                 cur_text = []
                 self.cur_word = Word(word)
+
+            # handle the yaml front matter
+            elif not hit_first_header:
+                self._handle_front_matter(line)
 
             # create a new definition
             elif line.startswith("---"):
@@ -174,7 +206,7 @@ class DictusParser:
                 elif self.cur_word:
                     self.cur_word.props[prop[0]] = prop[1]
 
-            else:
+            elif hit_first_header:
                 cur_text.append(line)
 
         if self.cur_def and self.cur_word:
@@ -244,7 +276,11 @@ def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: st
         ext = f".{ext}"
     for i in input:
         if os.path.isdir(i):
-            files += [f for f in os.listdir(i) if os.path.splitext(f)[1] == ext]
+            files += [
+                os.path.join(i, f)
+                for f in os.listdir(i)
+                if os.path.splitext(f)[1] == ext
+            ]
         else:
             if os.path.splitext(i)[1] == ext:
                 files.append(i)
