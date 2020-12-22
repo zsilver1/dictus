@@ -90,10 +90,17 @@ function filterWordByPos(word, pos) {
     var matched = false;
 
     $(word).find(".pos").each(function(_) {
-        let wordPos = this.innerHTML.replace(/\W/g, '');
-        if (wordPos === pos) {
-            matched = true;
-        } else {
+        var innerMatched = false;
+        let posList = this.innerHTML.split(",");
+        console.log(posList);
+        for (i in posList) {
+            let wordPos = posList[i].replace(/\W/g, '')
+            if (wordPos === pos) {
+                matched = true;
+                innerMatched = true;
+            }
+        }
+        if (!innerMatched) {
             $(this).closest(".def.main").hide();
         }
     });

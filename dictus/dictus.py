@@ -140,7 +140,8 @@ class DictusParser:
         if m := DictusParser.property_regex.match(line):
             # special case for parts of speech
             if m.group(1) == "pos":
-                self.cur_lang.pos_set.add(m.group(2).lower().strip())
+                pos_list = m.group(2).split(",")
+                self.cur_lang.pos_set.update([pos.strip().lower() for pos in pos_list])
             return (m.group(1), m.group(2))
         return None
 
