@@ -4,7 +4,7 @@ import os
 import re
 import click
 from collections import OrderedDict
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 import xml.etree.ElementTree as etree
 
 import markdown
@@ -201,8 +201,10 @@ class DictusGenerator:
     ):
         self.site_name = site_name
         self.output_dir = output_dir
+        self.data_dir = data_dir
+
         self.env = Environment(
-            loader=PackageLoader("dictus", template_dir),
+            loader=FileSystemLoader(template_dir),
             autoescape=select_autoescape(["html"]),
         )
         self.langs = langs
@@ -236,13 +238,16 @@ def _markdown_kwargs():
     }
 
 
-def dictus(input: List[str], output_dir: str, templates: str, data: str):
+def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: str):
     files = []
+    if not ext.startswith("."):
+        ext = f".{ext}"
     for i in input:
         if os.path.isdir(i):
-            files += os.listdir(i)
+            files += [f for f in os.listdir(i) if os.path.splitext(f)[1] == ext]
         else:
-            files.append(i)
+            if os.path.splitext(i)[1] == ext:
+                files.append(i)
 
     parser = DictusParser(*files, **_markdown_kwargs())
     langs = parser.run()
@@ -251,8 +256,8 @@ def dictus(input: List[str], output_dir: str, templates: str, data: str):
         langs,
         site_name="Language",
         output_dir=output_dir,
-        # template_dir=templates,
-        # data_dir=data,
+        template_dir=templates,
+        data_dir=data,
     )
     gen.run()
 
@@ -261,10 +266,18 @@ def dictus(input: List[str], output_dir: str, templates: str, data: str):
 @click.option(
     "--input",
     "--in",
-    help="Input markdown file or directory with markdown files",
+    help="Input file or directory",
     multiple=True,
     required=True,
     type=click.Path(exists=True),
+)
+@click.option(
+    "--input-ext",
+    "--ext",
+    help="Input file extension (e.g. 'md')",
+    required=True,
+    default="md",
+    type=str,
 )
 @click.option(
     "--output-dir",
@@ -275,15 +288,17 @@ def dictus(input: List[str], output_dir: str, templates: str, data: str):
 @click.option(
     "--templates",
     help="Directory with templates 'base.jinja2' and 'lang.jinja2'",
+    default="templates/",
     type=click.Path(exists=True, file_okay=False),
 )
 @click.option(
     "--data",
     help="Path containing 'dictus.css' and 'dictus.js' files to be included in the output",
+    default="data/",
     type=click.Path(exists=True, file_okay=False),
 )
-def main(input, output_dir, templates, data):
-    dictus(input, output_dir, templates, data)
+def main(input, input_ext, output_dir, templates, data):
+    dictus(input, input_ext, output_dir, templates, data)
 
 
 if __name__ == "__main__":
