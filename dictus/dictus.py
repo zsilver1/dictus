@@ -51,6 +51,7 @@ class Word:
         self.name = name
         self.text = ""
         self.props: OrderedDict[str, str] = OrderedDict()
+        self.tags = []
         self.defs: List[Definition] = []
 
     def __repr__(self):
@@ -60,7 +61,8 @@ class Word:
 class Definition:
     def __init__(self):
         self.text = ""
-        self.props: Dict[str, str] = {}
+        self.props: OrderedDict[str, str] = OrderedDict()
+        self.tags = []
 
     def __repr__(self):
         return f"Def({self.props})"
@@ -91,6 +93,7 @@ class Language:
 class DictusParser:
 
     property_regex = re.compile(r"^\$\{(.*):\s*(.*)\}")
+    tag_regex = re.compile(r"^\$\{([^:]*)\}")
 
     def __init__(self, *files, **markdown_kwargs):
         self.languages: List[Language] = []
@@ -139,6 +142,12 @@ class DictusParser:
             if m.group(1) == "pos":
                 self.cur_lang.pos_set.add(m.group(2).lower().strip())
             return (m.group(1), m.group(2))
+        return None
+
+    def _get_tag_from_line(self, line: str) -> Optional[str]:
+        line = line.strip()
+        if m := DictusParser.tag_regex.match(line):
+            return m.group(1).strip()
         return None
 
     def _parse_markdown(self, text_lines: List[str]) -> str:
@@ -205,6 +214,12 @@ class DictusParser:
                     self.cur_def.props[prop[0]] = prop[1]
                 elif self.cur_word:
                     self.cur_word.props[prop[0]] = prop[1]
+
+                elif tag := self._get_tag_from_line(line):
+                    if self.cur_def:
+                        self.cur_def.tags.append(tag)
+                    elif self.cur_word:
+                        self.cur_word.tags.append(tag)
 
             elif hit_first_header:
                 cur_text.append(line)
