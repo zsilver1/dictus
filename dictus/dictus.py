@@ -3,12 +3,15 @@ from typing import List
 import os
 import click
 
-from .parser import DictusParser
+from .parser import DictusParser, Dialect
 from .generator import DictusGenerator
 
 
-def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: str):
+def dictus(
+    input: List[str], dialect: Dialect, output_dir: str, templates: str, data: str
+):
     files = []
+    ext = dialect.value
     if not ext.startswith("."):
         ext = f".{ext}"
     for i in input:
@@ -22,7 +25,7 @@ def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: st
             if os.path.splitext(i)[1] == ext:
                 files.append(i)
 
-    parser = DictusParser()
+    parser = DictusParser(dialect)
     langs = parser.run(*files)
 
     gen = DictusGenerator(
@@ -45,12 +48,12 @@ def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: st
     type=click.Path(exists=True),
 )
 @click.option(
-    "--input-ext",
-    "--ext",
-    help="Input file extension (e.g. 'toml')",
+    "--input-dialect",
+    "--dialect",
+    help="Input file dialect",
     required=True,
-    default="toml",
-    type=str,
+    default="yaml",
+    type=click.Choice([e.value for e in Dialect], case_sensitive=False),
 )
 @click.option(
     "--output-dir",
@@ -70,8 +73,8 @@ def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: st
     default="data/",
     type=click.Path(exists=True, file_okay=False),
 )
-def main(input, input_ext, output_dir, templates, data):
-    dictus(input, input_ext, output_dir, templates, data)
+def main(input, input_dialect, output_dir, templates, data):
+    dictus(input, Dialect(input_dialect), output_dir, templates, data)
 
 
 if __name__ == "__main__":

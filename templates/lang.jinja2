@@ -25,7 +25,7 @@
 
       {# LOOP THROUGH DEFINITIONS #}
       {% for def in lemma.defs %}
-        <div class="def main">
+        <div class="def main" id={{ lemma.name }}:{{ loop.index }}>
           <div class="def props">
             <div class="term pos">
               {{ def.pos | join(", ")}}

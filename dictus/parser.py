@@ -1,12 +1,36 @@
 from typing import List
 import os
-import tomlkit
+from enum import Enum
 
 from .model import Language, Lemma
 from .link import LinkRegistry
 
 
+class Dialect(Enum):
+    YAML = "yaml"
+    TOML = "toml"
+    JSON = "json"
+
+    @staticmethod
+    def parse_contents(dialect, text: str) -> str:
+        if dialect == Dialect.YAML:
+            import yaml
+
+            return yaml.safe_load(text)
+        elif dialect == Dialect.TOML:
+            import tomlkit
+
+            return tomlkit.parse(text)
+        elif dialect == Dialect.JSON:
+            import json
+
+            return json.loads(text)
+
+
 class DictusParser:
+    def __init__(self, dialect: Dialect):
+        self.dialect = dialect
+
     def run(self, *files) -> List[Language]:
         self.lang_list = []
         for fname in files:
@@ -24,10 +48,12 @@ class DictusParser:
         return langs
 
     def _parse_lang_from_file(self, lang_name: str, contents: str) -> Language:
-        toml = tomlkit.parse(contents)
-        lang_metadata = toml.pop("metadata", {})
+        lang_dict = Dialect.parse_contents(self.dialect, contents)
+        lang_metadata = lang_dict.pop("metadata", {})
         lang = Language(lang_name, **lang_metadata)
-        for lemma, contents in toml.items():
+        for lemma, contents in lang_dict.items():
+            if not contents:
+                continue
             lem = Lemma(lang, lemma, self.lr, **contents)
             lang.lemmas.append(lem)
         return lang
