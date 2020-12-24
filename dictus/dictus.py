@@ -1,67 +1,10 @@
 #!/usr/bin/env python3
-from typing import Dict, List, Optional, Tuple
+from typing import List
 import os
-import re
-import math
 import click
-from collections import OrderedDict
-from dataclasses import dataclass
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-import markdown
 
-from .word_link import WordLinkExtension
-
-
-class DictusParser:
-    pass
-
-
-class DictusGenerator:
-    def __init__(
-        self,
-        langs: List[Language],
-        site_name: str = "Dictionary",
-        template_dir: str = "templates",
-        output_dir: str = "build",
-        data_dir: str = "data",
-    ):
-        self.site_name = site_name
-        self.output_dir = output_dir
-        self.data_dir = data_dir
-
-        self.env = Environment(
-            loader=FileSystemLoader(template_dir),
-            autoescape=select_autoescape(["html"]),
-        )
-        self.langs = langs
-
-    def run(self):
-        for lang in self.langs:
-            path = os.path.join(self.output_dir, f"{lang.name}.html")
-            with open(path, "w") as f:
-                f.write(self._render_lang_file(lang))
-
-    def _render_lang_file(self, lang: Language) -> str:
-        template = self.env.get_template("lang.jinja2")
-        return template.render(
-            site_name=self.site_name,
-            lang=lang,
-            langs=[(l.name, l.display_name) for l in self.langs],
-        )
-
-
-def _markdown_kwargs():
-    return {
-        "extensions": [
-            "footnotes",
-            "tables",
-            "smarty",
-            "sane_lists",
-            "pymdownx.betterem",
-            "pymdownx.caret",
-            "pymdownx.tilde",
-        ]
-    }
+from .parser import DictusParser
+from .generator import DictusGenerator
 
 
 def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: str):
@@ -79,8 +22,8 @@ def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: st
             if os.path.splitext(i)[1] == ext:
                 files.append(i)
 
-    parser = DictusParser(*files, **_markdown_kwargs())
-    langs = parser.run()
+    parser = DictusParser()
+    langs = parser.run(*files)
 
     gen = DictusGenerator(
         langs,
@@ -104,9 +47,9 @@ def dictus(input: List[str], ext: str, output_dir: str, templates: str, data: st
 @click.option(
     "--input-ext",
     "--ext",
-    help="Input file extension (e.g. 'md')",
+    help="Input file extension (e.g. 'toml')",
     required=True,
-    default="md",
+    default="toml",
     type=str,
 )
 @click.option(

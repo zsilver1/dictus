@@ -1,20 +1,24 @@
 from typing import List
 import os
 import tomlkit
-from .model import LinkRegistry, Language, Lemma
+
+from .model import Language, Lemma
+from .link import LinkRegistry
 
 
 class DictusParser:
-    def __init__(self):
-        self.lr = LinkRegistry()
-
     def run(self, *files) -> List[Language]:
-        langs = []
+        self.lang_list = []
         for fname in files:
-            name = os.path.splitext(fname)[0]
+            fname = os.path.basename(fname)
+            lang_name = os.path.splitext(fname)[0]
+            self.lang_list.append(lang_name)
+        self.lr = LinkRegistry(set(self.lang_list))
+        langs = []
+        for lang_name, fname in zip(self.lang_list, files):
             with open(fname) as f:
                 contents = f.read()
-            lang = self._parse_lang_from_file(name, contents)
+            lang = self._parse_lang_from_file(lang_name, contents)
             langs.append(lang)
 
         return langs
@@ -24,6 +28,6 @@ class DictusParser:
         lang_metadata = toml.pop("metadata", {})
         lang = Language(lang_name, **lang_metadata)
         for lemma, contents in toml.items():
-            lem = Lemma(lang_name, lemma, self.lr, **contents)
+            lem = Lemma(lang, lemma, self.lr, **contents)
             lang.lemmas.append(lem)
         return lang

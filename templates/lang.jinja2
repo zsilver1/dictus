@@ -7,40 +7,35 @@
 {% endblock pos %}
 
 {% block content %}
-  {% for word in lang.words %}
-    <div class="word main" id={{ word.name }}>
-      <hr class="word line">
-      <h1 class="word name">{{ word.name }}</h1>
-      <div class="word props">
-        {% for prop in word.props %}
+  {% for lemma in lang.lemmas %}
+    <div class="lemma main" id={{ lemma.name }}>
+      <hr class="lemma line">
+      <h1 class="lemma name">{{ lemma.name }}</h1>
+      <div class="lemma props">
+        {% for prop in lemma.props %}
           <div class="prop">
             {{ prop }}
           </div>
         {% endfor %}
       </div>
-      <div class="word text">
-        {{word.text}}
+      <div class="lemma text">
+        {{ lemma.text | safe}}
       </div>
 
 
       {# LOOP THROUGH DEFINITIONS #}
-      {% for def in word.defs %}
+      {% for def in lemma.defs %}
         <div class="def main">
           <div class="def props">
             <div class="term pos">
-              {{ def.props.pop("pos", "") }}
+              {{ def.pos | join(", ")}}
             </div>
             <div class="glosses">
-              {{ def.props.pop("glosses", "") }}
+              {{ def.glosses | join(", ")}}
             </div>
-            {% for prop in def.props %}
-              <div class="prop">
-                {{ prop }}
-              </div>
-            {% endfor %}
           </div>
           <div class="def text">
-            {{ def.text }}
+            {{ def.text | safe}}
           </div>
         </div>
       {% endfor %}
