@@ -57,14 +57,14 @@ hr {
 }
 
 /* WORD */
-.word.name {
+.lemma.name {
     font-weight: bold;
     font-style: italic;
     flex-shrink: 0;
     font-size: 140%;
 }
 
-.word.props {
+.lemma.props {
     font-style: italic;
     font-size: 80%;
 }

@@ -77,7 +77,7 @@ function scoreWord(word, inputStr, highlight = true, hide = true) {
 }
 
 function sortAll() {
-    $("#content .word.main").sort((a, b) => {
+    $("#content .lemma.main").sort((a, b) => {
         return ($(b).data("score") - $(a).data("score"));
     }).appendTo("#content");
 }
@@ -115,7 +115,7 @@ function filterWords(input, pos) {
 
     let filterPos = (pos !== "all");
 
-    $("#content").find(".word.main").each(function(_) {
+    $("#content").find(".lemma.main").each(function(_) {
         if (filterPos) {
             filterWordByPos(this, pos);
         }

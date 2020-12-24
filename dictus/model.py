@@ -44,7 +44,7 @@ class Lemma(ABC):
         self.lang = lang
         self.name = name
         self.text = parse_markdown(kwargs.pop("text", ""), lr)
-        self.tags: List[str] = kwargs.pop("tags", [])
+        self.tags = [tag.strip() for tag in kwargs.pop("tags", [])]
         self.defs: List[Definition] = []
 
         def_list = kwargs.pop("defs", [])
@@ -65,9 +65,9 @@ class Definition:
         self.index = index
 
         self.text = parse_markdown(kwargs.pop("text", ""), lr)
-        self.tags: List[str] = kwargs.pop("tags", [])
-        self.glosses = kwargs.pop("glosses", [])
-        self.pos: Union[str, List[str]] = kwargs.pop("pos", None)
+        self.tags = [tag.strip() for tag in kwargs.pop("tags", [])]
+        self.glosses = [gloss.strip() for gloss in kwargs.pop("glosses", [])]
+        self.pos = [pos.strip() for pos in kwargs.pop("pos", [])]
         if self.pos:
             lang.pos_set.update(self.pos)
 
