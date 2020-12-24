@@ -1,5 +1,18 @@
+/* COLOR SCHEME */
+:root {
+    --main: #91BF51;
+    --bg: #F7F7F7;
+    --light-accent: #8C9594;
+    --text: #343A39;
+    --dark-accent: #92794E;
+    --highlight: yellow;
+}
+
+
 /* GENERIC */
 body {
+    background-color: var(--bg);
+    color: var(--text);
     font-size: 1.2em;
     font-family: "Times New Roman", Times, serif;
 }
@@ -14,35 +27,26 @@ body {
     display: grid;
 }
 
-hr {
-    border: 0;
-    border-top: 2px solid lightgrey;
-    height: 1px;
-    width: 100%;
-}
-
 /* NAVBAR */
-#topnav ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  width: 12%;
-  position: fixed;
-  background-color: lightgrey;
+#nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 12%;
+    position: fixed;
 }
 
-#topnav li a {
-  display: block;
-  color: #000;
-  padding: 10px 16px;
-  text-decoration: none;
-  font-weight: bold;
+#nav li a {
+    display: block;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-weight: bold;
 }
 
 /* Change the link color on hover */
-#topnav li a:hover {
-  background-color: #555;
-  color: white;
+#nav li a:hover {
+    background-color: var(--light-accent);
+    color: var(--bg);
 }
 
 /* TABLES */
@@ -53,10 +57,10 @@ hr {
 .text th, td {
     padding: 5px 10px 5px 5px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--light-accent);
 }
 
-/* WORD */
+/* LEMMA */
 .lemma.name {
     font-weight: bold;
     font-style: italic;
@@ -69,6 +73,13 @@ hr {
     font-size: 80%;
 }
 
+.lemma.line {
+    border: 0;
+    border-top: 3px solid var(--light-accent);
+    height: 1px;
+    width: 100%;
+}
+
 /* DEFINITION */
 .def.props {
     /* font-style: italic; */
@@ -77,22 +88,70 @@ hr {
 
 .term {
     font-variant: small-caps;
-    font-size: 120%;
+    font-size: 90%;
+    /* font-weight: bold; */
+    display: inline-block;
 }
 
 .glosses {
     font-style: italic;
 }
 
+.def.line {
+    width: 50%;
+    text-align: left;
+    margin-left: 0;
+    border: 0;
+    border-top: 2px solid var(--light-accent);
+    height: 1px;
+}
+
+/* DEFINITION LINKS */
+
+.link-section {
+    padding-top: 30px;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: row;
+    font-size: 90%;
+}
+
+.link-section-title {
+    font-weight: bold;
+    text-decoration: underline;
+    font-size: 115%;
+    padding-bottom: 5px;
+}
+
+.links {
+    width: 30%;
+}
+
+.backlinks {
+}
+
+.link-group {
+    padding-bottom: 10px;
+}
+
+.link-group-label {
+    font-weight: bold;
+}
+
+.link-url {
+    padding-left: 10px;
+}
+
 
 /* RANDOM STUFF */
-a:visited {
-    color: blue;
+a, a:visited {
+    color: var(--dark-accent);
+    text-decoration: none;
 }
 
 .highlight {
     font-weight: bold;
-    background-color: yellow;
+    background-color: var(--highlight);
 }
 
 /* WIDGETS */

@@ -91,10 +91,11 @@ function filterWordByPos(word, pos) {
 
     $(word).find(".pos").each(function(_) {
         var innerMatched = false;
-        let posList = this.innerHTML.split(",");
+        let posList = this.innerHTML.split(",").map(s => s.trim());
         console.log(posList);
         for (i in posList) {
             let wordPos = posList[i].replace(/\W/g, '')
+            console.log(wordPos, pos)
             if (wordPos === pos) {
                 matched = true;
                 innerMatched = true;
@@ -138,12 +139,12 @@ $(document).ready(function () {
 
     $("#select").change(function () {
         let input = $("#search").val().toLowerCase();
-        let pos = $(this).val().toLowerCase();
+        let pos = $(this).val();
         filterWords(input, pos);
     });
 
     $("#search").bind("search", function (_) {
-        let pos = $("#select").val().toLowerCase();
+        let pos = $("#select").val();
         filterWords(search.value, pos);
     });
 });

@@ -2,7 +2,7 @@ from typing import List
 from abc import ABC
 import math
 from markdown import Markdown
-from .link import DictusLinkExtension, LinkRegistry, Link, parse_link
+from .link import DictusLinkExtension, LinkRegistry, LinkGroup, parse_link
 
 
 MARKDOWN_KWARGS = {
@@ -49,7 +49,7 @@ class Lemma(ABC):
 
         def_list = kwargs.pop("defs", [])
         for i, d in enumerate(def_list):
-            self.defs.append(Definition(lang, name, i, lr, **d))
+            self.defs.append(Definition(lang, name, i + 1, lr, **d))
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -77,19 +77,19 @@ class Definition:
             if not isinstance(link_strs, list):
                 # in this case "link_strs" is actually a single link str
                 link = parse_link(link_strs, self.lang.name, type)
-                self._lr.add_link(link, self.lang, self.lemma, self.index)
+                self._lr.add_link(link, self.lang.name, self.lemma, self.index)
             else:
                 for link_str in link_strs:
                     link = parse_link(link_str, self.lang.name, type)
-                    self._lr.add_link(link, self.lang, self.lemma, self.index)
+                    self._lr.add_link(link, self.lang.name, self.lemma, self.index)
 
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     @property
-    def links(self) -> List[Link]:
+    def link_groups(self) -> List[LinkGroup]:
         return self._lr.get_links(self.lang.name, self.lemma, self.index)
 
     @property
-    def backlinks(self) -> List[Link]:
+    def backlink_groups(self) -> List[LinkGroup]:
         return self._lr.get_backlinks(self.lang.name, self.lemma, self.index)

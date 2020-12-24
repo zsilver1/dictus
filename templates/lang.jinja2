@@ -2,7 +2,7 @@
 {% block pos %}
   <option value="all">All</option>
   {% for p in lang.pos_set %}
-    <option value="{{ p }}">{{ p|title }}</option>
+    <option value="{{ p|title }}">{{ p|title }}</option>
   {% endfor %}
 {% endblock pos %}
 
@@ -28,7 +28,7 @@
         <div class="def main" id={{ lemma.name }}:{{ loop.index }}>
           <div class="def props">
             <div class="term pos">
-              {{ def.pos | join(", ")}}
+              {{ def.pos | join(", ") | title}}
             </div>
             <div class="glosses">
               {{ def.glosses | join(", ")}}
@@ -37,7 +37,44 @@
           <div class="def text">
             {{ def.text | safe}}
           </div>
+
+          {% if def.link_groups | length %}
+            <div class="link-section">
+              <div class="links">
+                <div class="link-section-title"> Links </div>
+                {% for link_group in def.link_groups %}
+                  <div class="link-group">
+                    <div class="link-group-label"> {{ link_group.type | title }} </div>
+                    {% for link in link_group.links %}
+                      <div class="link-url">
+                        {{ link.url | safe}}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if def.backlink_groups | length %}
+              <div class="backlinks">
+                <div class="link-section-title"> Backlinks </div>
+                {% for link_group in def.backlink_groups %}
+                  <div class="link-group">
+                    <div class="link-group-label"> {{ link_group.type | title }} </div>
+                    {% for link in link_group.links %}
+                      <div class="link-url">
+                        {{ link.url | safe}}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
         </div>
+        {% if not loop.last %}
+          <hr class="def line">
+        {% endif %}
       {% endfor %}
     </div>
   {% endfor %}
