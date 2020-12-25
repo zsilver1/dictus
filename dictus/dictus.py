@@ -27,7 +27,9 @@ def dictus(
 
     parser = DictusParser(dialect)
     langs = parser.run(*files)
-
+    if not langs:
+        print("No languages were found...")
+        return
     gen = DictusGenerator(
         langs,
         site_name="Language",

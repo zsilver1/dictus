@@ -43,12 +43,15 @@ class DictusParser:
             with open(fname) as f:
                 contents = f.read()
             lang = self._parse_lang_from_file(lang_name, contents)
-            langs.append(lang)
+            if lang:
+                langs.append(lang)
 
         return langs
 
     def _parse_lang_from_file(self, lang_name: str, contents: str) -> Language:
         lang_dict = Dialect.parse_contents(self.dialect, contents)
+        if not lang_dict:
+            return None
         lang_metadata = lang_dict.pop("metadata", {})
         lang = Language(lang_name, **lang_metadata)
         for lemma, contents in lang_dict.items():
