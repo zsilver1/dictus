@@ -2,6 +2,8 @@
 from typing import List
 import os
 import click
+import pkg_resources
+import shutil
 
 from .parser import DictusParser, Dialect
 from .generator import DictusGenerator
@@ -40,7 +42,34 @@ def dictus(
     gen.run()
 
 
+def setup(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    if not os.path.isdir("data"):
+        os.mkdir("data")
+    css_file = pkg_resources.resource_filename(__name__, 'data/dictus.css')
+    js_file = pkg_resources.resource_filename(__name__, 'data/dictus.js')
+    shutil.copy(css_file, "data")
+    shutil.copy(js_file, "data")
+
+    if not os.path.isdir("templates"):
+        os.mkdir("templates")
+    base_temp_file = pkg_resources.resource_filename(__name__, 'templates/base.jinja2')
+    lang_temp_file = pkg_resources.resource_filename(__name__, 'templates/lang.jinja2')
+    shutil.copy(base_temp_file, "templates")
+    shutil.copy(lang_temp_file, "templates")
+    ctx.exit()
+
+
 @click.command()
+@click.option(
+    "--setup",
+    is_flag=True,
+    callback=setup,
+    expose_value=False,
+    is_eager=True,
+    help="Copies default templates, .js, and .css files to the current directory",
+)
 @click.option(
     "--input",
     "--in",

@@ -55,6 +55,13 @@ class Lemma(ABC):
             setattr(self, k, v)
 
 
+def _strip_list_or_str(list_or_str) -> List[str]:
+    if isinstance(list_or_str, list):
+        return [s.strip() for s in list_or_str]
+    else:
+        return [list_or_str.strip()]
+
+
 class Definition:
     def __init__(
         self, lang: Language, lemma: str, index: int, lr: LinkRegistry, **kwargs
@@ -65,9 +72,9 @@ class Definition:
         self.index = index
 
         self.text = parse_markdown(kwargs.pop("text", ""), lr)
-        self.tags = [tag.strip() for tag in kwargs.pop("tags", [])]
-        self.glosses = [gloss.strip() for gloss in kwargs.pop("glosses", [])]
-        self.pos = [pos.strip() for pos in kwargs.pop("pos", [])]
+        self.tags = _strip_list_or_str(kwargs.pop("tags", []))
+        self.glosses = _strip_list_or_str(kwargs.pop("glosses", []))
+        self.pos = _strip_list_or_str(kwargs.pop("pos", []))
         if self.pos:
             lang.pos_set.update(self.pos)
 
