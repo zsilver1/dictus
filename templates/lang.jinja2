@@ -11,13 +11,6 @@
     <div class="lemma main" id={{ lemma.name }}>
       <hr class="lemma line">
       <h1 class="lemma name">{{ lemma.name }}</h1>
-      <div class="lemma props">
-        {% for prop in lemma.props %}
-          <div class="prop">
-            {{ prop }}
-          </div>
-        {% endfor %}
-      </div>
       <div class="lemma text">
         {{ lemma.text | safe}}
       </div>
