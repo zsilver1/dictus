@@ -44,6 +44,8 @@ class DictusParser:
                 contents = f.read()
             lang = self._parse_lang_from_file(lang_name, contents)
             if lang:
+                lang.pos_set = list(lang.pos_set)
+                lang.pos_set.sort()
                 langs.append(lang)
 
         return langs
