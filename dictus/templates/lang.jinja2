@@ -23,9 +23,22 @@
             <div class="term pos">
               {{ def.pos | join(", ") | title}}
             </div>
+
+            <div class="tags">
+              {{ def.tags | join(", ")}}
+            </div>
+
+            {% for prop, val in def.props.items() %}
+              <div class="prop">
+                <span class="prop-key">{{ prop }}: </span>
+                <span class="prop-val">{{ val }}</span>
+              </div>
+            {% endfor %}
+
             <div class="glosses">
               {{ def.glosses | join(", ")}}
             </div>
+            
           </div>
           <div class="def text">
             {{ def.text | safe}}

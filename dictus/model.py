@@ -1,6 +1,7 @@
 from typing import List
 from abc import ABC
 import math
+from collections import OrderedDict
 from markdown import Markdown
 from .link import DictusLinkExtension, LinkRegistry, LinkGroup, parse_link
 
@@ -75,6 +76,7 @@ class Definition:
         self.tags = _strip_list_or_str(kwargs.pop("tags", []))
         self.glosses = _strip_list_or_str(kwargs.pop("glosses", []))
         self.pos = _strip_list_or_str(kwargs.pop("pos", []))
+        self.props = OrderedDict()
         if self.pos:
             lang.pos_set.update(self.pos)
 
@@ -92,6 +94,7 @@ class Definition:
 
         for k, v in kwargs.items():
             setattr(self, k, v)
+            self.props[k] = v
 
     @property
     def link_groups(self) -> List[LinkGroup]:
