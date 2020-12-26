@@ -28,8 +28,9 @@ class Dialect(Enum):
 
 
 class DictusParser:
-    def __init__(self, dialect: Dialect):
+    def __init__(self, dialect: Dialect, sort: bool = True):
         self.dialect = dialect
+        self.sort = sort
 
     def run(self, *files) -> List[Language]:
         self.lang_list = []
@@ -61,4 +62,6 @@ class DictusParser:
                 continue
             lem = Lemma(lang, lemma, self.lr, **contents)
             lang.lemmas.append(lem)
+        if self.sort:
+            lang.lemmas.sort(key=lambda l: l.name)
         return lang

@@ -10,7 +10,12 @@ from .generator import DictusGenerator
 
 
 def dictus(
-    input: List[str], dialect: Dialect, output_dir: str, templates: str, data: str
+    input: List[str],
+    dialect: Dialect,
+    output_dir: str,
+    templates: str,
+    data: str,
+    sort: bool,
 ):
     files = []
     ext = dialect.value
@@ -27,7 +32,7 @@ def dictus(
             if os.path.splitext(i)[1] == ext:
                 files.append(i)
 
-    parser = DictusParser(dialect)
+    parser = DictusParser(dialect, sort)
     langs = parser.run(*files)
     if not langs:
         print("No languages were found...")
@@ -47,15 +52,15 @@ def setup(ctx, param, value):
         return
     if not os.path.isdir("data"):
         os.mkdir("data")
-    css_file = pkg_resources.resource_filename(__name__, 'data/dictus.css')
-    js_file = pkg_resources.resource_filename(__name__, 'data/dictus.js')
+    css_file = pkg_resources.resource_filename(__name__, "data/dictus.css")
+    js_file = pkg_resources.resource_filename(__name__, "data/dictus.js")
     shutil.copy(css_file, "data")
     shutil.copy(js_file, "data")
 
     if not os.path.isdir("templates"):
         os.mkdir("templates")
-    base_temp_file = pkg_resources.resource_filename(__name__, 'templates/base.jinja2')
-    lang_temp_file = pkg_resources.resource_filename(__name__, 'templates/lang.jinja2')
+    base_temp_file = pkg_resources.resource_filename(__name__, "templates/base.jinja2")
+    lang_temp_file = pkg_resources.resource_filename(__name__, "templates/lang.jinja2")
     shutil.copy(base_temp_file, "templates")
     shutil.copy(lang_temp_file, "templates")
     ctx.exit()
@@ -104,8 +109,14 @@ def setup(ctx, param, value):
     default="data/",
     type=click.Path(exists=True, file_okay=False),
 )
-def main(input, input_dialect, output_dir, templates, data):
-    dictus(input, Dialect(input_dialect), output_dir, templates, data)
+@click.option(
+    "--sort",
+    is_flag=True,
+    default=True,
+    help="If true, will alphabetize the lexicon",
+)
+def main(input, input_dialect, output_dir, templates, data, sort):
+    dictus(input, Dialect(input_dialect), output_dir, templates, data, sort)
 
 
 if __name__ == "__main__":
